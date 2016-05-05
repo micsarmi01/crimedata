@@ -1,4 +1,5 @@
-dat = read.csv("/Users/michaelsarmiento/Desktop/crimetableset.csv")
+
+dat = read.csv("/Users/wiseR3B3L/Documents/CS/R Projects/crimedata-master/crimetableset.csv")
 
 library(rpart)
 library(rpart.plot)
@@ -9,12 +10,25 @@ Hours <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format =
 HourOnly <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%H")
 MonthOnly <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%m")
 
+unique(dat$Category)
+
+violent <- ifelse(dat$Category=="ASSUALT"
+                  ||dat$Category=="SEX OFFENSES FORCIBLE"
+                  ||dat$Category=="ROBBERY"
+                  ||dat$Category=="KIDNAPPING", 1, 0)
+
 #Add to DF dat
 dat["HourOnly"] = NA
 dat$HourOnly=as.numeric(HourOnly)
 
 dat["MonthOnly"] = NA
 dat$MonthOnly=as.numeric(MonthOnly)
+
+dat["IsViolent"] = NA
+dat$IsViolent = ifelse(dat$Category=="ASSAULT"
+                       |dat$Category=="SEX OFFENSES FORCIBLE"
+                       |dat$Category=="ROBBERY"
+                       |dat$Category=="KIDNAPPING", 1, 0)
 
 #regular crime by day
 barplot(table(dat$DayOfWeek)/100000, ylim = c(0, .14), col="red", main="Crime By Day in by 10k")
@@ -34,11 +48,7 @@ head(dat,4)
 #Assaults by hour
 ##plot(density(dat$Category))
 
-par(mfrow=c(1,2)) 
 barplot(table(dat$HourOnly[dat$Category=="ASSAULT"]),col = "red",ylim=c(0, 400), main="Assaults by the hour", xlab="Hour of the day",las=2)
-
-#All Cime by the hour
-barplot(table(dat$HourOnly),col = "red", main="Assaults by the hour", xlab="Hour of the day",las=2)
 
 #Assaults by month
 table(dat$MonthOnly[dat$Category=="ASSAULT"])
@@ -52,9 +62,21 @@ summary(dat$PdDistrict)
 table(dat$PdDistrict[dat$Category=="ASSAULT"])
 plot(dat$PdDistrict[dat$Category=="ASSAULT"],ylim=c(0,1200), pch=19, main="Assaults by district",las=2)
 
+#probability of an Assault by district 
+par(las=2)
+par(mar=c(6,4,2,2))
+barplot(table(dat$PdDistrict[dat$Category=="ASSAULT"])/table(dat$PdDistrict), ylim = range(0, .15))
 
-#probability of an Assault
-NROW(dat$PdDistrict[dat$Category=="ASSAULT"&&dat$])/NROW(dat$PdDistrict)
+#probability of violent crimes by district
+par(las=2)
+par(mar=c(6,4,2,2))
+barplot(table(dat$PdDistrict[dat$IsViolent==1])/table(dat$PdDistrict), ylim = range(0, .2))
+
+#probability of violent crimes by hour
+par(las=2)
+par(mar=c(6,4,2,2))
+barplot(table(dat$HourOnly[dat$IsViolent==1&dat$PdDistrict=="TENDERLOIN"])/table(dat$HourOnly[dat$PdDistrict=="TENDERLOIN"]), ylim = range(0, .4), main = "Violent Crimes by Hour for Tenderloin District")
+
 
 #Given the Day of week, Month, Hour, and District, Predict the type of crime catagory
 
