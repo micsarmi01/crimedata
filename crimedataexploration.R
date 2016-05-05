@@ -1,0 +1,57 @@
+dat = read.csv("/Users/michaelsarmiento/Desktop/crimetableset.csv")
+
+library(rpart)
+library(rpart.plot)
+summary(dat)
+
+#Data Cleaning Split hours and Days
+Hours <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%H:%M")
+HourOnly <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%H")
+MonthOnly <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%m")
+
+#Add to DF dat
+dat["HourOnly"] = NA
+dat$HourOnly=as.numeric(HourOnly)
+
+dat["MonthOnly"] = NA
+dat$MonthOnly=as.numeric(MonthOnly)
+
+#regular crime by day
+barplot(table(dat$DayOfWeek)/100000, ylim = c(0, .14), col="red", main="Crime By Day in by 10k")
+
+#regular crime by day
+table(dat$DayOfWeek[dat$Category=="ASSAULT"])
+
+#Assults by day
+barplot(table(dat$DayOfWeek[dat$Category=="ASSAULT"]),col = "red",ylim = c(0, 1200), main="Assaults by the day")
+
+#Assults by hour
+
+str(dat$DayOfWeek)
+
+head(dat,4)
+
+#Assults by hour
+##plot(density(dat$Category))
+
+barplot(table(dat$HourOnly[dat$Category=="ASSAULT"]),col = "red",ylim=c(0, 400), main="Assaults by the hour", xlab="Hour of the day",las=2)
+
+#Assults by month
+table(dat$MonthOnly[dat$Category=="ASSAULT"])
+barplot(table(dat$MonthOnly[dat$Category=="ASSAULT"]),col = "red",ylim=c(0,700), main="Assaults by the month",las=2)
+
+#Robbery by month
+barplot(table(dat$MonthOnly[dat$Category=="ROBBERY"]),col = "red",ylim=c(0,230), main="Robberies by the month",las=2)
+
+#Assults by district
+summary(dat$PdDistrict)
+table(dat$PdDistrict[dat$Category=="ASSAULT"])
+plot(dat$PdDistrict[dat$Category=="ASSAULT"],ylim=c(0,1200), pch=19, main="Assaults by district",las=2)
+
+
+#probability of an assult
+NROW(dat$PdDistrict[dat$Category=="ASSAULT"&&dat$])/NROW(dat$PdDistrict)
+
+#Given the Day of week, Month, Hour, and District, Predict the type of crime catagory
+
+#Between 4-
