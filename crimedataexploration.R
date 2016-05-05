@@ -34,7 +34,11 @@ head(dat,4)
 #Assaults by hour
 ##plot(density(dat$Category))
 
+par(mfrow=c(1,2)) 
 barplot(table(dat$HourOnly[dat$Category=="ASSAULT"]),col = "red",ylim=c(0, 400), main="Assaults by the hour", xlab="Hour of the day",las=2)
+
+#All Cime by the hour
+barplot(table(dat$HourOnly),col = "red", main="Assaults by the hour", xlab="Hour of the day",las=2)
 
 #Assaults by month
 table(dat$MonthOnly[dat$Category=="ASSAULT"])
