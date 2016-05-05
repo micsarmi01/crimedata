@@ -22,34 +22,34 @@ barplot(table(dat$DayOfWeek)/100000, ylim = c(0, .14), col="red", main="Crime By
 #regular crime by day
 table(dat$DayOfWeek[dat$Category=="ASSAULT"])
 
-#Assults by day
+#Assaults by day
 barplot(table(dat$DayOfWeek[dat$Category=="ASSAULT"]),col = "red",ylim = c(0, 1200), main="Assaults by the day")
 
-#Assults by hour
+#Assaults by hour
 
 str(dat$DayOfWeek)
 
 head(dat,4)
 
-#Assults by hour
+#Assaults by hour
 ##plot(density(dat$Category))
 
 barplot(table(dat$HourOnly[dat$Category=="ASSAULT"]),col = "red",ylim=c(0, 400), main="Assaults by the hour", xlab="Hour of the day",las=2)
 
-#Assults by month
+#Assaults by month
 table(dat$MonthOnly[dat$Category=="ASSAULT"])
 barplot(table(dat$MonthOnly[dat$Category=="ASSAULT"]),col = "red",ylim=c(0,700), main="Assaults by the month",las=2)
 
 #Robbery by month
 barplot(table(dat$MonthOnly[dat$Category=="ROBBERY"]),col = "red",ylim=c(0,230), main="Robberies by the month",las=2)
 
-#Assults by district
+#Assaults by district
 summary(dat$PdDistrict)
 table(dat$PdDistrict[dat$Category=="ASSAULT"])
 plot(dat$PdDistrict[dat$Category=="ASSAULT"],ylim=c(0,1200), pch=19, main="Assaults by district",las=2)
 
 
-#probability of an assult
+#probability of an Assault
 NROW(dat$PdDistrict[dat$Category=="ASSAULT"&&dat$])/NROW(dat$PdDistrict)
 
 #Given the Day of week, Month, Hour, and District, Predict the type of crime catagory
