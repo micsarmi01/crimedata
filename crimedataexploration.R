@@ -1,4 +1,5 @@
-dat = read.csv("/Users/michaelsarmiento/Desktop/crimetableset.csv")
+
+dat = read.csv("/Users/wiseR3B3L/Documents/CS/R Projects/crimedata-master/crimetableset.csv")
 
 library(rpart)
 library(rpart.plot)
@@ -47,11 +48,7 @@ head(dat,4)
 #Assaults by hour
 ##plot(density(dat$Category))
 
-par(mfrow=c(1,2)) 
 barplot(table(dat$HourOnly[dat$Category=="ASSAULT"]),col = "red",ylim=c(0, 400), main="Assaults by the hour", xlab="Hour of the day",las=2)
-
-#All Cime by the hour
-barplot(table(dat$HourOnly),col = "blue", main="All Crimes by the hour", xlab="Hour of the day",las=2)
 
 #Assaults by month
 table(dat$MonthOnly[dat$Category=="ASSAULT"])
@@ -71,18 +68,48 @@ par(mar=c(6,4,2,2))
 barplot(table(dat$PdDistrict[dat$Category=="ASSAULT"])/table(dat$PdDistrict), ylim = range(0, .15))
 
 #probability of violent crimes by district
-par(mfrow=c(1,2)) 
 par(las=2)
 par(mar=c(6,4,2,2))
-barplot(table(dat$PdDistrict[dat$IsViolent==1])/table(dat$PdDistrict), ylim = range(0, .2),main="Probability of Violent Crime by District")
+barplot(table(dat$PdDistrict[dat$IsViolent==1])/table(dat$PdDistrict), ylim = range(0, .2))
 
-#probability of violent crimes by hour for district Tenderloin
+#probability of violent crimes by hour
 par(las=2)
 par(mar=c(6,4,2,2))
-barplot(table(dat$HourOnly[dat$IsViolent==1&dat$PdDistrict=="TENDERLOIN"])/table(dat$HourOnly[dat$PdDistrict=="TENDERLOIN"]), ylim = range(0, .4), main = "Violent Crimes by Hour for Tenderloin District")
-
+barplot(table(dat$HourOnly[dat$IsViolent==1])/table(dat$HourOnly), ylim = range(0, .25), main = "Violent Crimes by Hour")
 
 
 #Given the Day of week, Month, Hour, and District, Predict the type of crime catagory
 
 #Between 4-
+
+#Split data into test and training data
+split_data = function(dat, frac=c(0.75, 0.25)) {
+  # at least one set must be specified
+  k = length(frac)
+  stopifnot(k > 0)
+  
+  n = nrow(dat)
+  frac = frac/(sum(frac))
+  starts = c(1, round(cumsum(frac) * n)[-k])
+  ends = c(starts[-1]-1,n)
+  samp = sample(1:n)
+  data_sets = list()
+  for (i in 1:k) {
+    data_sets[[i]] = dat[samp[starts[i]:ends[i]],]
+  }
+  return(data_sets)
+} 
+
+
+
+set.seed(132)
+split = split_data(dat)
+tr_dat = split[[1]]
+te_dat = split[[2]]
+
+
+
+
+
+
+
