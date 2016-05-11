@@ -1,8 +1,10 @@
 
-dat = read.csv("/Users/wiseR3B3L/Documents/CS/R Projects/crimedata-master/crimetableset.csv")
+#dat = read.csv("/Users/wiseR3B3L/Documents/CS/R Projects/crimedata-master/crimetableset.csv")
+dat = read.csv("/Users/michaelsarmiento/Desktop/crimetableset.csv")
 
 library(rpart)
 library(rpart.plot)
+library(e1071)
 summary(dat)
 
 #Data Cleaning Split hours and Days
@@ -29,6 +31,9 @@ dat$IsViolent = ifelse(dat$Category=="ASSAULT"
                        |dat$Category=="SEX OFFENSES FORCIBLE"
                        |dat$Category=="ROBBERY"
                        |dat$Category=="KIDNAPPING", 1, 0)
+
+#dat$IsViolent = factor(dat$IsViolent, labels=c("nonViolent", "violent"))
+
 
 #regular crime by day
 barplot(table(dat$DayOfWeek)/100000, ylim = c(0, .14), col="red", main="Crime By Day in by 10k")
@@ -100,16 +105,58 @@ split_data = function(dat, frac=c(0.75, 0.25)) {
   return(data_sets)
 } 
 
-
-
+dat$IsViolent = factor(dat$IsViolent, labels=c("nonViolent", "violent"))
+dat$HourOnly = factor(dat$HourOnly)
 set.seed(132)
 split = split_data(dat)
 tr_dat = split[[1]]
 te_dat = split[[2]]
 
+fit = naiveBayes(IsViolent ~ ., data=tr_dat)
+predicts = predict(fit, newdata=te_dat)
+conf_mtx = table(predicts, te_dat$IsViolent)
+
+#####The accuracy of the first model presented with the confusion matrix
+
+mean(predicts == te_dat$IsViolent)
+conf_mtx
 
 
+#Second Model
+fit = naiveBayes(IsViolent ~ HourOnly+DayOfWeek+PdDistrict, data=tr_dat)
+predicts = predict(fit, newdata=te_dat)
+conf_mtx = table(predicts, te_dat$IsViolent)
+
+#####The accuracy of the first model presented with the confusion matrix
+
+mean(predicts == te_dat$IsViolent)
+conf_mtx
+
+#Third Model
+fit = naiveBayes(IsViolent ~ DayOfWeek+PdDistrict, data=tr_dat)
+predicts = predict(fit, newdata=te_dat)
+conf_mtx = table(predicts, te_dat$IsViolent)
+
+#####The accuracy of the first model presented with the confusion matrix
+
+mean(predicts == te_dat$IsViolent)
+conf_mtx
+
+df = data.frame(table(dat$Dates))
 
 
+#Cluster Analysis
+
+#hc = hclust(dist(dat$DayOfWeek), method="complete")
+# plot the “dendrogram”
+#plot(hc)
+
+sort(table(dat$PdDistrict, dat$DayOfWeek, dat$HourOnly))
+
+dat["Index"] = NA
+
+df = data.frame(table(dat$PdDistrict, dat$DayOfWeek, dat$HourOnly))
+
+quantile(df$Freq,probs=seq(0,1,length.out=20))
 
 
