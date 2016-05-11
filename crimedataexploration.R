@@ -159,4 +159,29 @@ df = data.frame(table(dat$PdDistrict, dat$DayOfWeek, dat$HourOnly))
 
 quantile(df$Freq,probs=seq(0,1,length.out=20))
 
+ViolentDF = data.frame(table(dat$PdDistrict[dat$IsViolent=="violent"], dat$DayOfWeek[dat$IsViolent=="violent"], dat$HourOnly[dat$IsViolent=="violent"]))
+NonDF = data.frame(table(dat$PdDistrict[dat$IsViolent=="nonViolent"], dat$DayOfWeek[dat$IsViolent=="nonViolent"], dat$HourOnly[dat$IsViolent=="nonViolent"]))
+                   
+ViolentDF["WeightedFreq"]  = NA
+NonDF["WeightedFreq"]  = NA
+NonDF["ViolentWeighted"] =NA
+NonDF["Combined"] =NA
+df["WeightedFreq"]  = NA
 
+
+ViolentDF["WeightedFreq"] = ViolentDF$Freq*.7
+NonDF["WeightedFreq"] = NonDF$Freq*.3
+NonDF$ViolentWeighted = ViolentDF$WeightedFreq
+NonDF$ViolentWeighted <- as.numeric(NonDF$ViolentWeighted )
+NonDF$WeightedFreq <- as.numeric(NonDF$WeightedFreq)
+NonDF$Combined = NonDF$ViolentWeighted + NonDF$WeightedFreq
+
+head(NonDF, 10)
+head(ViolentDF, 10)
+head(NonDF, 100)
+#In the view sort by Combined Column
+View(NonDF)
+
+newdata <- NonDF[order(NonDF$Combined),]
+
+View(newdata)
