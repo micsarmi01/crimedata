@@ -166,6 +166,7 @@ ViolentDF["WeightedFreq"]  = NA
 NonDF["WeightedFreq"]  = NA
 NonDF["ViolentWeighted"] =NA
 NonDF["Combined"] =NA
+NonDF["CrimeIndex"] =NA
 df["WeightedFreq"]  = NA
 
 
@@ -175,6 +176,7 @@ NonDF$ViolentWeighted = ViolentDF$WeightedFreq
 NonDF$ViolentWeighted <- as.numeric(NonDF$ViolentWeighted )
 NonDF$WeightedFreq <- as.numeric(NonDF$WeightedFreq)
 NonDF$Combined = NonDF$ViolentWeighted + NonDF$WeightedFreq
+NonDF$CrimeIndex = NonDF$Combined / 62.3
 
 head(NonDF, 10)
 head(ViolentDF, 10)
@@ -185,3 +187,6 @@ View(NonDF)
 newdata <- NonDF[order(NonDF$Combined),]
 
 View(newdata)
+
+
+
