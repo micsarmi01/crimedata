@@ -1,6 +1,4 @@
-
-#dat = read.csv("/Users/wiseR3B3L/Documents/CS/R Projects/crimedata-master/crimetableset.csv")
-dat = read.csv("/Users/michaelsarmiento/Desktop/crimetableset.csv")
+dat = read.csv("/Users/wiseR3B3L/Documents/CS/R Projects/crimedata/crimetableset.csv")
 
 library(rpart)
 library(rpart.plot)
@@ -11,13 +9,6 @@ summary(dat)
 Hours <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%H:%M")
 HourOnly <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%H")
 MonthOnly <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%m")
-
-unique(dat$Category)
-
-violent <- ifelse(dat$Category=="ASSUALT"
-                  ||dat$Category=="SEX OFFENSES FORCIBLE"
-                  ||dat$Category=="ROBBERY"
-                  ||dat$Category=="KIDNAPPING", 1, 0)
 
 #Add to DF dat
 dat["HourOnly"] = NA
@@ -107,6 +98,7 @@ split_data = function(dat, frac=c(0.75, 0.25)) {
 
 dat$IsViolent = factor(dat$IsViolent, labels=c("nonViolent", "violent"))
 dat$HourOnly = factor(dat$HourOnly)
+
 set.seed(132)
 split = split_data(dat)
 tr_dat = split[[1]]
@@ -143,7 +135,6 @@ mean(predicts == te_dat$IsViolent)
 conf_mtx
 
 df = data.frame(table(dat$Dates))
-
 
 #Cluster Analysis
 
