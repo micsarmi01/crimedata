@@ -24,7 +24,9 @@ rawData = read.csv("/Users/wiseR3B3L/Documents/CS/R Projects/crimedata/crimetabl
 
 ###Loading requiered libraries and resources
 ```{r}
-
+library(rpart)
+library(rpart.plot)
+library(e1071)
 ```
 ***
 #Data Exploration
@@ -72,6 +74,8 @@ rawData$IsViolent = ifelse(rawData$Category=="ASSAULT"
                        |rawData$Category=="ROBBERY"
                        |rawData$Category=="KIDNAPPING", 1, 0)
 
+rawData$IsViolent = factor(rawData$IsViolent, labels=c("nonViolent", "violent"))
+rawData$HourOnly = factor(rawData$HourOnly)
 
 head(rawData,5)
 ```
@@ -112,7 +116,80 @@ barplot(table(rawData$MonthOnly[rawData$Category=="ROBBERY"]),col = "Navy",ylim=
 ```{r}
 summary(rawData$PdDistrict)
 table(rawData$PdDistrict[rawData$Category=="ASSAULT"])
-par(las=2,mar=c(3,3,2,2))
-plot(rawData$PdDistrict[rawData$Category=="ASSAULT"],ylim=c(0,1200), pch=19, main="Assaults by district")
+par(las=2,mar=c(7,3,2,2))
+plot(rawData$PdDistrict[rawData$Category=="ASSAULT"],ylim=c(0,1200), pch=19, main="Assaults by district", col = "navy")
+```
+
+###Creating Split Function
+```{r}
+split_data = function(dat, frac=c(0.75, 0.25)) {
+  
+  k = length(frac)
+  stopifnot(k > 0)
+  
+  n = nrow(dat)
+  frac = frac/(sum(frac))
+  starts = c(1, round(cumsum(frac) * n)[-k])
+  ends = c(starts[-1]-1,n)
+  samp = sample(1:n)
+  data_sets = list()
+  for (i in 1:k) {
+    data_sets[[i]] = dat[samp[starts[i]:ends[i]],]
+  }
+  return(data_sets)
+} 
+```
+
+
+###Spliting the date into training and test datesets
+```{r}
+set.seed(132)
+split = split_data(rawData)
+tr_dat = split[[1]]
+te_dat = split[[2]]
+```
+
+***
+
+#Data Modeling Section
+##Naïve Bayes #1
+Using train data to make the model and using test data to see how acurate it is
+```{r}
+fit = naiveBayes(IsViolent ~ ., data=tr_dat)
+predicts = predict(fit, newdata=te_dat)
+conf_mtx = table(predicts, te_dat$IsViolent)
+```
+
+confusion matrix and accuracy of the model
+```{r}
+mean(predicts == te_dat$IsViolent)
+conf_mtx
+```
+
+##Naïve Bayes #2
+```{r}
+fit = naiveBayes(IsViolent ~ HourOnly+DayOfWeek+PdDistrict, data=tr_dat)
+predicts = predict(fit, newdata=te_dat)
+conf_mtx = table(predicts, te_dat$IsViolent)
+```
+
+confusion matrix and accuracy of the model
+```{r}
+mean(predicts == te_dat$IsViolent)
+conf_mtx
+```
+
+
+##Naïve Bayes #3
+```{r}
+fit = naiveBayes(IsViolent ~ DayOfWeek+PdDistrict, data=tr_dat)
+predicts = predict(fit, newdata=te_dat)
+conf_mtx = table(predicts, te_dat$IsViolent)
+```
+
+confusion matrix and accuracy of the model
+```{r}
+mean(predicts == te_dat$IsViolent)
+conf_mtx
 ```
 
