@@ -1,0 +1,118 @@
+---
+title: "San Francisco Crime Data Mining Project"
+author: "Arash, Mike, Russell"
+date: "May 14, 2016"
+output: html_document
+---
+***
+###Project Summary
+This is the final group project for Data Mining (CST495).
+We are going to use San Francisco crime data to predict how dangerous it is to be in different locations during different times.
+We are going to look at the data from 911 calls. Dataset has a number of features but we are going to mostly use Police District, Time of day, Day of week and Type of crime (is it violent or not).
+
+***
+
+#Data Acquisition
+We acquired the dataset from Kaggle.com.
+We are using data from 9/7/14 to 1/10/15 which contains more than 76000 emergency calls to SFPD.
+https://www.kaggle.com/c/sf-crime/data
+```{r}
+
+rawData = read.csv("/Users/wiseR3B3L/Documents/CS/R Projects/crimedata/crimetableset.csv")
+
+```
+
+###Loading requiered libraries and resources
+```{r}
+
+```
+***
+#Data Exploration
+We need to explore the data to have a better understanding about the data that we are working with.
+We have prepared different plot and heat maps to display how scattered is our data in different neighborhoods.
+
+###Dataset Structure and Summary
+```{r}
+
+str(rawData)
+
+summary(rawData)
+
+```
+
+***
+
+#Data Cleaning 
+###Extracting hours and Days and month from Date variable
+```{r}
+
+Hours <- format(as.POSIXct(strptime(rawData$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%H:%M")
+HourOnly <- format(as.POSIXct(strptime(rawData$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%H")
+MonthOnly <- format(as.POSIXct(strptime(rawData$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%m")
+
+```
+
+###Adding new columns to the raw data frame
+```{r}
+
+rawData["HourOnly"] = NA
+rawData$HourOnly=as.numeric(HourOnly)
+
+rawData["MonthOnly"] = NA
+rawData$MonthOnly=as.numeric(MonthOnly)
+
+```
+
+###Adding a new column based on Category column where violent crimes get 1 and non-violent crimes get 0
+```{r}
+
+rawData["IsViolent"] = NA
+rawData$IsViolent = ifelse(rawData$Category=="ASSAULT"
+                       |rawData$Category=="SEX OFFENSES FORCIBLE"
+                       |rawData$Category=="ROBBERY"
+                       |rawData$Category=="KIDNAPPING", 1, 0)
+
+
+head(rawData,5)
+```
+
+###Daily crime rate
+```{r}
+par(las=2,mar=c(6,3,2,2))
+barplot(sort(table(rawData$DayOfWeek)), ylim = c(0, 12000), col="navy", main="Crimes By Day of Week")
+```
+
+
+####Number of daily assaults
+```{r}
+table(rawData$DayOfWeek[rawData$Category=="ASSAULT"])
+par(las=2,mar=c(6,3,2,2))
+barplot(sort(table(rawData$DayOfWeek[rawData$Category=="ASSAULT"])),col = "navy",ylim = c(0, 1200), main="Assaults by Day of Week")
+```
+
+###Hourly Assault Rate
+```{r}
+par(las=2,mar=c(3,3,2,2))
+barplot(table(rawData$HourOnly[rawData$Category=="ASSAULT"]),col = "navy",ylim=c(0, 400), main="Number of Assaults Hourly", xlab="Hour of the day")
+```
+
+###Monthly Assault Rate
+```{r}
+par(las=2,mar=c(3,3,2,2))
+barplot(table(rawData$MonthOnly[rawData$Category=="ASSAULT"]),col = "navy",ylim=c(0,700), main="Number of Assaults by Months", xlab="Month of the year")
+```
+
+###Monthly Robbery Rate
+```{r}
+par(las=2,mar=c(3,3,2,2))
+barplot(table(rawData$MonthOnly[rawData$Category=="ROBBERY"]),col = "Navy",ylim=c(0,230), main="Robberies by the month")
+```
+
+###Grouping Assaults by Police District
+```{r}
+summary(rawData$PdDistrict)
+table(rawData$PdDistrict[rawData$Category=="ASSAULT"])
+par(las=2,mar=c(3,3,2,2))
+plot(rawData$PdDistrict[rawData$Category=="ASSAULT"],ylim=c(0,1200), pch=19, main="Assaults by district")
+```
+

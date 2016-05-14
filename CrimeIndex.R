@@ -1,4 +1,4 @@
-dat = read.csv("/Users/michaelsarmiento/Desktop/crimetableset.csv")
+dat = read.csv("/Users/wiseR3B3L/Documents/CS/R Projects/crimedata/crimetableset.csv")
 
 
 library(rpart)
@@ -12,13 +12,6 @@ HourOnly <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,forma
 MonthOnly <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%m")
 
 unique(dat$Category)
-
-violent <- ifelse(dat$Category=="ASSUALT"
-                  ||dat$Category=="SEX OFFENSES FORCIBLE"
-                  ||dat$Category=="ROBBERY"
-                  ||dat$Category=="KIDNAPPING", 1, 0)
-
-
 
 #Add to DF dat
 dat["HourOnly"] = NA
@@ -39,33 +32,33 @@ df = data.frame(table(dat$PdDistrict, dat$DayOfWeek, dat$HourOnly))
 quantile(df$Freq,probs=seq(0,1,length.out=20))
 
 ViolentDF = data.frame(table(dat$PdDistrict[dat$IsViolent=="violent"], dat$DayOfWeek[dat$IsViolent=="violent"], dat$HourOnly[dat$IsViolent=="violent"]))
-NonDF = data.frame(table(dat$PdDistrict[dat$IsViolent=="nonViolent"], dat$DayOfWeek[dat$IsViolent=="nonViolent"], dat$HourOnly[dat$IsViolent=="nonViolent"]))
+tempCrimeData = data.frame(table(dat$PdDistrict[dat$IsViolent=="nonViolent"], dat$DayOfWeek[dat$IsViolent=="nonViolent"], dat$HourOnly[dat$IsViolent=="nonViolent"]))
 
 ViolentDF["WeightedFreq"]  = NA
-NonDF["WeightedFreq"]  = NA
-NonDF["ViolentWeighted"] =NA
-NonDF["Combined"] =NA
-NonDF["CrimeIndex"] =NA
+tempCrimeData["WeightedFreq"]  = NA
+tempCrimeData["ViolentWeighted"] =NA
+tempCrimeData["Combined"] =NA
+tempCrimeData["CrimeIndex"] =NA
 df["WeightedFreq"]  = NA
 
 
 ViolentDF["WeightedFreq"] = ViolentDF$Freq*.7
-NonDF["WeightedFreq"] = NonDF$Freq*.3
-NonDF$ViolentWeighted = ViolentDF$WeightedFreq
-NonDF$ViolentWeighted <- as.numeric(NonDF$ViolentWeighted )
-NonDF$WeightedFreq <- as.numeric(NonDF$WeightedFreq)
-NonDF$Combined = NonDF$ViolentWeighted + NonDF$WeightedFreq
-NonDF$CrimeIndex = NonDF$Combined / 62.3
+tempCrimeData["WeightedFreq"] = tempCrimeData$Freq*.3
+tempCrimeData$ViolentWeighted = ViolentDF$WeightedFreq
+tempCrimeData$ViolentWeighted <- as.numeric(tempCrimeData$ViolentWeighted )
+tempCrimeData$WeightedFreq <- as.numeric(tempCrimeData$WeightedFreq)
+tempCrimeData$Combined = tempCrimeData$ViolentWeighted + tempCrimeData$WeightedFreq
+tempCrimeData$CrimeIndex = tempCrimeData$Combined / 62.3
 
-head(NonDF, 10)
+head(tempCrimeData, 10)
 head(ViolentDF, 10)
-head(NonDF, 100)
+head(tempCrimeData, 100)
 #In the view sort by Combined Column
-View(NonDF)
+View(tempCrimeData)
 
-newdata <- NonDF[order(NonDF$Combined),]
+crimeIndexData = data.frame(tempCrimeData$Var1, tempCrimeData$Var2, tempCrimeData$Var3, tempCrimeData$CrimeIndex)
 
-View(newdata)
+names(crimeIndexData) <- c("Pd District", "Day Of Week", "Hour Only", "Crime Index")
 
 
 
