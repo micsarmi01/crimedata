@@ -193,3 +193,42 @@ mean(predicts == te_dat$IsViolent)
 conf_mtx
 ```
 
+
+```{r}
+df = data.frame(table(rawData$PdDistrict, rawData$DayOfWeek, rawData$HourOnly))
+quantile(df$Freq,probs=seq(0,1,length.out=20))
+
+ViolentDF = data.frame(table(rawData$PdDistrict[rawData$IsViolent=="violent"], rawData$DayOfWeek[rawData$IsViolent=="violent"], rawData$HourOnly[rawData$IsViolent=="violent"]))
+tempCrimeData = data.frame(table(rawData$PdDistrict[rawData$IsViolent=="nonViolent"], rawData$DayOfWeek[rawData$IsViolent=="nonViolent"], rawData$HourOnly[rawData$IsViolent=="nonViolent"]))
+
+ViolentDF["WeightedFreq"]  = NA
+tempCrimeData["WeightedFreq"]  = NA
+tempCrimeData["ViolentWeighted"] =NA
+tempCrimeData["Combined"] =NA
+tempCrimeData["CrimeIndex"] =NA
+df["WeightedFreq"]  = NA
+
+ViolentDF["WeightedFreq"] = ViolentDF$Freq*.7
+tempCrimeData["WeightedFreq"] = tempCrimeData$Freq*.3
+tempCrimeData$ViolentWeighted = ViolentDF$WeightedFreq
+tempCrimeData$ViolentWeighted <- as.numeric(tempCrimeData$ViolentWeighted )
+tempCrimeData$WeightedFreq <- as.numeric(tempCrimeData$WeightedFreq)
+tempCrimeData$Combined = tempCrimeData$ViolentWeighted + tempCrimeData$WeightedFreq
+tempCrimeData$CrimeIndex = tempCrimeData$Combined / 62.3
+
+head(tempCrimeData, 10)
+head(ViolentDF, 10)
+head(tempCrimeData, 100)
+
+
+crimeIndexData = data.frame(tempCrimeData$Var1, tempCrimeData$Var2, tempCrimeData$Var3, tempCrimeData$CrimeIndex)
+
+names(crimeIndexData) <- c("Pd District", "Day Of Week", "Hour Only", "Crime Index")
+View(crimeIndexData)
+```
+
+
+
+
+
+
