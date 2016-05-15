@@ -12,6 +12,18 @@ We are going to look at the data from 911 calls. Dataset has a number of feature
 
 ***
 
+###Loading requiered libraries and resources
+```{r}
+library(rpart)
+library(rpart.plot)
+library(e1071)
+library(rgdal)    
+library(ggplot2)
+library(RColorBrewer)
+library(rgeos)
+```
+
+
 #Data Acquisition
 We acquired the dataset from Kaggle.com.
 We are using data from 9/7/14 to 1/10/15 which contains more than 76000 emergency calls to SFPD.
@@ -19,15 +31,11 @@ https://www.kaggle.com/c/sf-crime/data
 ```{r}
 
 rawData = read.csv("/Users/wiseR3B3L/Documents/CS/R Projects/crimedata/crimetableset.csv")
+SFMap = readOGR("/Users/wiseR3B3L/Downloads/Historic Police Districts/","SFPD")
 
 ```
 
-###Loading requiered libraries and resources
-```{r}
-library(rpart)
-library(rpart.plot)
-library(e1071)
-```
+
 ***
 #Data Exploration
 We need to explore the data to have a better understanding about the data that we are working with.
@@ -120,6 +128,70 @@ par(las=2,mar=c(7,3,2,2))
 plot(rawData$PdDistrict[rawData$Category=="ASSAULT"],ylim=c(0,1200), pch=19, main="Assaults by district", col = "navy")
 ```
 
+***
+
+
+#HeatMap Setup
+```{r}
+dat = rawData
+map.df <- fortify(SFMap)
+centers <- SpatialPointsDataFrame(gCentroid(SFMap, byid=TRUE), SFMap@data, match.ID=FALSE)
+centDF = as.data.frame(centers)
+centroids <- gCentroid(SFMap, byid=TRUE)
+```
+
+##Some data cleaning for Heat Map
+```{r}
+Hours <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%H:%M")
+HourOnly <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%H")
+MonthOnly <- format(as.POSIXct(strptime(dat$Dates,"%m/%d/%Y %H:%M",tz="")) ,format = "%m")
+dat["HourOnly"] = NA
+dat$HourOnly=as.numeric(HourOnly)
+dat["MonthOnly"] = NA
+dat$MonthOnly=as.numeric(MonthOnly)
+dat["IsViolent"] = NA
+dat$IsViolent = ifelse(dat$Category=="ASSAULT"
+                       |dat$Category=="SEX OFFENSES FORCIBLE"
+                       |dat$Category=="ROBBERY"
+                       |dat$Category=="KIDNAPPING", 1, 0)
+
+```
+
+
+
+###HeatMap of Total crime in San Francisco, May 2014 -> May 2015
+```{r}
+#all crime heatmap
+ggplot(dat, aes(x=X, y=Y))  + geom_point(colour="red", size = 0.1)  + stat_density2d(aes(fill = ..level..), alpha=1, geom="polygon")+ scale_fill_gradientn(colours=rev(brewer.pal(11,"Spectral"))) + coord_fixed() + geom_path(data=map.df,aes(x=long, y=lat,group=group), colour="black") + geom_text(data=centDF, mapping=aes(x=x, y=y, label=district), size=3, vjust=0.5, hjust=0.5) + ggtitle("San Francisco ALL Crime Occurences Heatmap\n May 2014 - May 2015") + theme(plot.title = element_text(lineheight=2, face="bold"))
+```
+
+###HeatMap of all VIOLENT crime in San Francisco, May 2014 -> May 2015
+```{r}
+#violent crimes heatmap
+ggplot(dat[dat$IsViolent == 1,], aes(x=X, y=Y))  + geom_point(colour="red", size = 0.1)  + stat_density2d(aes(fill = ..level..), alpha=1, geom="polygon")+ scale_fill_gradientn(colours=rev(brewer.pal(11,"Spectral"))) + coord_fixed() + geom_path(data=map.df,aes(x=long, y=lat,group=group), colour="black") + geom_text(data=centDF, mapping=aes(x=x, y=y, label=district), size=3, vjust=0.5, hjust=0.5) + ggtitle("San Francisco Violent Crime Occurences Heatmap\n May 2014 - May 2015") + theme(plot.title = element_text(lineheight=2, face="bold"))
+```
+
+###HeatMap of Violent crimes in San Francisco, from 5am to 11am  May 2014 -> May 2015
+```{r}
+#5am - 11am Heatmap Violent Crimes
+ggplot(dat[(dat$IsViolent == 1 & dat$HourOnly > 5 & dat$HourOnly < 11),], aes(x=X, y=Y)) + geom_point(colour="red", size = 0.1)  + scale_fill_gradientn(colours=rev(brewer.pal(11,"Spectral"))) + stat_density2d(aes(fill = ..level..), alpha=1, geom="polygon") + coord_fixed() + geom_path(data=map.df,aes(x=long, y=lat,group=group), colour="black") + geom_text(data=centDF, mapping=aes(x=x, y=y, label=district), size=3, vjust=0.5, hjust=0.5) + ggtitle("San Francisco Violent Crime Occurences Heatmap\n5am -11am, May 2014 - May 2015") + theme(plot.title = element_text(lineheight=2, face="bold"))
+```
+
+###HeatMap of Violent crimes in San Francisco, from 12pm to 6pm  May 2014 -> May 2015
+```{r}
+#1200-1800 Heatmap Violent Crimes
+ggplot(dat[(dat$IsViolent == 1 & dat$HourOnly > 12 & dat$HourOnly < 18),], aes(x=X, y=Y))  + geom_point(colour="red", size = 0.1) + stat_density2d(aes(fill = ..level..), alpha=1, geom="polygon") + scale_fill_gradientn(colours=rev(brewer.pal(11,"Spectral"))) + coord_fixed() + geom_path(data=map.df,aes(x=long, y=lat,group=group), colour="black") + geom_text(data=centDF, mapping=aes(x=x, y=y, label=district), size=3, vjust=0.5, hjust=0.5) + ggtitle("San Francisco Violent Crime Occurences Heatmap\n 12pm - 6pm, May 2014 - May 2015") + theme(plot.title = element_text(lineheight=2, face="bold"))
+```
+
+###HeatMap of Violent crimes in San Francisco, from 7pm to 5am  May 2014 -> May 2015
+```{r}
+ggplot(dat[(dat$IsViolent == 1 & (dat$HourOnly > 19 | dat$HourOnly < 5)),], aes(x=X, y=Y))  + geom_point(colour="red", size = 0.1) + stat_density2d(aes(fill = ..level..), alpha=1, geom="polygon") + scale_fill_gradientn(colours=rev(brewer.pal(11,"Spectral"))) + coord_fixed() + geom_path(data=map.df,aes(x=long, y=lat,group=group), colour="black") + geom_text(data=centDF, mapping=aes(x=x, y=y, label=district), size=3, vjust=0.5, hjust=0.5) + ggtitle("San Francisco Violent Crime Occurences Heatmap\n7pm - 5am, May 2014 - May 2015") + theme(plot.title = element_text(lineheight=2, face="bold"))
+```
+
+***
+
+#Data Modeling Section
+
 ###Creating Split Function
 ```{r}
 split_data = function(dat, frac=c(0.75, 0.25)) {
@@ -151,8 +223,7 @@ te_dat = split[[2]]
 
 ***
 
-#Data Modeling Section
-##Naïve Bayes #1
+##Naïve Bayes
 Using train data to make the model and using test data to see how acurate it is
 ```{r}
 fit = naiveBayes(IsViolent ~ ., data=tr_dat)
@@ -166,34 +237,11 @@ mean(predicts == te_dat$IsViolent)
 conf_mtx
 ```
 
-##Naïve Bayes #2
-```{r}
-fit = naiveBayes(IsViolent ~ HourOnly+DayOfWeek+PdDistrict, data=tr_dat)
-predicts = predict(fit, newdata=te_dat)
-conf_mtx = table(predicts, te_dat$IsViolent)
-```
+***
 
-confusion matrix and accuracy of the model
-```{r}
-mean(predicts == te_dat$IsViolent)
-conf_mtx
-```
+##Calculating Crime Index
 
-
-##Naïve Bayes #3
-```{r}
-fit = naiveBayes(IsViolent ~ DayOfWeek+PdDistrict, data=tr_dat)
-predicts = predict(fit, newdata=te_dat)
-conf_mtx = table(predicts, te_dat$IsViolent)
-```
-
-confusion matrix and accuracy of the model
-```{r}
-mean(predicts == te_dat$IsViolent)
-conf_mtx
-```
-
-
+###Crime Index will be based on District, Day of week, hour of day and if it is violent.
 ```{r}
 df = data.frame(table(rawData$PdDistrict, rawData$DayOfWeek, rawData$HourOnly))
 quantile(df$Freq,probs=seq(0,1,length.out=20))
@@ -216,15 +264,64 @@ tempCrimeData$WeightedFreq <- as.numeric(tempCrimeData$WeightedFreq)
 tempCrimeData$Combined = tempCrimeData$ViolentWeighted + tempCrimeData$WeightedFreq
 tempCrimeData$CrimeIndex = tempCrimeData$Combined / 62.3
 
-head(tempCrimeData, 10)
-head(ViolentDF, 10)
-head(tempCrimeData, 100)
-
-
 crimeIndexData = data.frame(tempCrimeData$Var1, tempCrimeData$Var2, tempCrimeData$Var3, tempCrimeData$CrimeIndex)
 
-names(crimeIndexData) <- c("Pd District", "Day Of Week", "Hour Only", "Crime Index")
+names(crimeIndexData) <- c("PdDistrict", "DayOfWeek", "HourOnly", "CrimeIndex")
 View(crimeIndexData)
+```
+
+***
+
+
+##Linear Model using Crime Index
+```{r}
+
+fit = lm(CrimeIndex ~ .,data=crimeIndexData)
+
+summary(fit)
+
+predicted = predict(fit)
+actual = crimeIndexData$CrimeIndex
+
+rng = range(c(predicted, actual))
+par(las=2,mar=c(3,3,2,2))
+plot(predicted, actual, pch=20, xlim=rng, ylim=rng, xlab="predicted", ylab="actual", main = "Predicted vs Actuals Using Linear Model")
+lines(c(rng[1], rng[2]), c(rng[1], rng[2]), lty=2, col="blue", lwd=1.5)
+
+```
+
+
+##Logistic Regression Model using Crime Index
+```{r}
+
+fit = glm(CrimeIndex ~ .,data=crimeIndexData, family = binomial)
+
+summary(fit)
+
+predicted = predict(fit, type = "response")
+actual = crimeIndexData$CrimeIndex
+
+rng = range(c(predicted, actual))
+par(las=2,mar=c(3,3,2,2))
+plot(predicted, actual, pch=20, xlim=rng, ylim=rng, xlab="predicted", ylab="actual", main = "Predicted vs Actuals Using Logistic Model")
+lines(c(rng[1], rng[2]), c(rng[1], rng[2]), lty=2, col="blue", lwd=1.5)
+```
+
+
+##Regression Tree Model using Crime Index
+```{r}
+set.seed(132)
+split = split_data(crimeIndexData)
+tr_dat = split[[1]]
+te_dat = split[[2]]
+
+fit = rpart(CrimeIndex ~ ., data=tr_dat)
+
+prp(fit, extra=1, varlen=-10, box.col="lightgreen")
+
+predicted = predict(fit, te_dat)
+errors = te_dat$CrimeIndex - predicted
+rmse = sqrt(mean(errors^2))
 ```
 
 
